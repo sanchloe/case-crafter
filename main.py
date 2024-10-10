@@ -23,7 +23,45 @@ try:
     st.markdown("<h2 style='text-align: center;'>Your AI Therapist Ally</h2>", unsafe_allow_html=True)
     st.markdown("---")
 
+    # name section
+    st.markdown("""
+    <div class="box">
+        <div class="row">
+            <div class="item"><strong>Client: John Doe</strong></div>
+            <div class="item"><strong>Date: 11 October 2024</strong></div>
+            <div class="item"><strong>Start Time: 10:00</strong></div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+
+    left_col, right_col = st.columns([4, 6])
+
+    # Left column (col1) can have multiple items
+    with left_col:
+        st.subheader("Upload Audio")
+        audio_file = st.file_uploader("Upload an audio file", type=["mp3"])
+
+        st.subheader("Template Style")
+        user_template_option = st.selectbox('Select your preferred template style',('SOAP', 'DAP', 'BIRP', 'Custom'))
+        st.write('You selected:', user_template_option)
+        st.write("Left Column - Section 1")
+        st.write("Left Column - Section 2")
+        st.write("Left Column - Section 3")
+        # Add more sections as needed...
+
+    # Right column (col2) with a bordered box and text inside
+    with right_col:
+        st.markdown("""
+            <div class="right-box">
+                <p>This is the right column with a border around it.</p>
+                <p>You can add more text or content here.</p>
+            </div>
+            """, unsafe_allow_html=True)
+
     audio_col, template_col= st.columns(spec=2,gap="large")
+
+
     with audio_col:
         audio_file = None
         st.subheader("Upload Audio")
@@ -31,8 +69,10 @@ try:
 
     with template_col:
         st.subheader("Template Style")
-        user_template_option = st.selectbox('Select your preferred template style',('SOAP', 'DAP', 'BIRP'))
+        user_template_option = st.selectbox('Select your preferred template style',('SOAP', 'DAP', 'BIRP', 'Custom'))
         st.write('You selected:', user_template_option)
+        if user_template_option == "Custom":
+            user_input = st.text_input("label goes here")
         submit_button = st.button("Submit", key="submit_button")
     st.markdown("---")
 
@@ -113,7 +153,6 @@ try:
             for section, details in data['sections'].items():
                 section_lst.append(section)
                 description_lst.append(details['description'])
-
         placeholders = {}
         if len(section_lst) > 0 and len(description_lst) > 0: 
             for key, description in zip(section_lst, description_lst):

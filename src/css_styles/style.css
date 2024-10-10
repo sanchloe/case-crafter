@@ -3,7 +3,47 @@
     padding: 0.2em 0.4em;
     margin: 0.2em;
     border: 1px solid #bbb;
-    border-radius: 10px;
-    background-color: #BEC6A0;
+    border-radius: 8px;
+    background-color: #bacbd8;
     font-size: 14px;
 }
+
+.box {
+    /* border: 2px solid #bacbd8; */
+    background-color: #bacbd8;
+    padding: 10px;
+    margin: 10px 0;
+    border-radius: 10px;
+}
+
+.row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.item {
+    flex-grow: 1;  /* Allow each item to grow equally */
+    text-align: center; /* Optional: center text within each item */
+}
+.main {
+    max-width: 1400px; /* Set the desired width here */
+    margin-left: auto;
+    margin-right: auto;
+    padding: 10px; /* Optional padding for extra space */
+}
+/* styles.css */
+
+/* Styling for the right column bordered box */
+.right-box {
+    border: 2px solid black;  /* Border around the right column */
+    background-color: #bacbd8;  /* Background color inside the box */
+    padding: 20px;  /* Padding inside the box */
+    margin: 10px 0;  /* Optional margin around the box */
+    border-radius: 8px; /* Rounded corners for the box */
+}
+
+p {
+    font-size: 16px;  /* Text size inside the box */
+}
+
