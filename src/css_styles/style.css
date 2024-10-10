@@ -1,0 +1,9 @@
+.recommendedtext{
+    display: inline-block;
+    padding: 0.2em 0.4em;
+    margin: 0.2em;
+    border: 1px solid #bbb;
+    border-radius: 10px;
+    background-color: #BEC6A0;
+    font-size: 14px;
+}
