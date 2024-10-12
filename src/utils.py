@@ -1,9 +1,10 @@
 import json
+import streamlit as st
+
 from dotenv import load_dotenv
 from langchain_databricks import ChatDatabricks
 
 load_dotenv()
-import streamlit as st
 
 def read_transcript(file_path):
     with open(file_path, 'r', encoding='utf-8') as file:
@@ -19,9 +20,6 @@ def load_model(endpoint, temperature):
     endpoint = endpoint,
     temperature = temperature)
     return model
-def load_template(file_path):
-    with open(file_path + '.json') as f:
-        return json.load(f)
 
 def load_css(file_name):
     with open(file_name) as f:
