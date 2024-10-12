@@ -1,6 +1,8 @@
 import json
 import streamlit as st
+import traceback
 
+from src.db_handler import DBConnector
 from src import utils
 from src.llama_inference import CaseNotesGenerator
 from tempfile import NamedTemporaryFile
@@ -139,9 +141,19 @@ try:
                 notes_template = utils.load_template(f"src/dependencies/{user_template_option}")
                 notes_generator = CaseNotesGenerator(audio_transcription, notes_template)
                 case_notes = notes_generator.get_notes()
+                
+                ##pass to db
+
+                # db_connector = DBConnector()
+
+                # try:
+                #     db_connector.connect()
+                #     db_connector.insert_feedback('test123', str(case_notes), 'testfeedback')
+                # finally:
+                #     db_connector.close()
 
             for key in section_lst:
                 placeholders[key].write(case_notes[key])
 
 except Exception as e:
-    print(e)
+    print(traceback.format_exc())
