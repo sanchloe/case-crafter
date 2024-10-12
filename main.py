@@ -132,7 +132,7 @@ try:
                 # upload file and get transcription from whisper
 
                 #sample transcription for testing, replace with whisper transcription
-                audio_transcription = utils.read_transcript("{src/dependencies}/sample_transcript.txt")
+                audio_transcription = utils.read_transcript("src/dependencies/sample_transcript.txt")
 
                 # pass transcription to llama
                 # pull values from llama output to update case notes and progress notes (update recommended and checkbox if can)
