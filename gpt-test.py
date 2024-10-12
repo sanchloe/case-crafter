@@ -3,6 +3,7 @@ import streamlit as st
 
 from src import llama_inference
 from tempfile import NamedTemporaryFile
+from src.notes_inference import ProgressNotes
 
 st.set_page_config(page_title="Case Crafter",layout="wide")
 
@@ -55,18 +56,16 @@ with left_col:
         option_2 = st.checkbox('Confused')
         option_3 = st.checkbox('Energetic')
         option_4 = st.checkbox('Worried')
-
     with section_1[1]:
         option_5 = st.checkbox('Fearful')
         option_6 = st.checkbox('Cooperative', key="cooperative_1")
         option_7 = st.checkbox('Withdrawn')
-
     with section_1[2]:
         option_8 = st.checkbox('Lethargic')
         option_9 = st.checkbox('Relaxed')
         option_10 = st.checkbox('Depressed')
 
-    recommendation_1 = st.markdown('<p>Recommended: <span class="recommendedtext">Anxious</span> <span class="recommendedtext">Fearful</span></p>', unsafe_allow_html=True)
+    recommendation_1_placeholder = st.markdown("Recommended:", unsafe_allow_html=True)
 
     st.markdown("###### Response To Treatment")
     section_2 = st.columns(2)
@@ -78,7 +77,7 @@ with left_col:
         option_14 = st.checkbox('Combative')
         option_15 = st.checkbox('Engaged')
 
-    recommendation_2 = st.markdown('<p>Recommended: <span class="recommendedtext">Engaged</span> <span class="recommendedtext">Receptive</span></p>', unsafe_allow_html=True)
+    recommendation_2_placeholder = st.markdown("Recommended:", unsafe_allow_html=True)
 
     st.markdown("###### Client Status")
     section_3 = st.columns(2)
@@ -88,7 +87,8 @@ with left_col:
     with section_3[1]:
         option_18 = st.checkbox('Regressed', key="regressed")
         option_19 = st.checkbox('Deteriorating')
-    recommendation_3 = st.markdown('<p>Recommended: <span class="recommendedtext">Unchanged</span></p>', unsafe_allow_html=True)
+
+    recommendation_3_placeholder = st.markdown("Recommended:", unsafe_allow_html=True)
 
     st.markdown("###### Risk Assessment")
     section_4 = st.columns(2)
@@ -100,7 +100,86 @@ with left_col:
         option_24 = st.checkbox('Danger to Self')
         option_25 = st.checkbox('Danger to Other')
         option_26 = st.checkbox('Plan to Cause Harm')
-    recommendation_4 = st.markdown('<p>Recommended: <span class="recommendedtext">Intention to Cause Harm</span></p>', unsafe_allow_html=True)
+
+    recommendation_4_placeholder = st.markdown("Recommended:", unsafe_allow_html=True)
+
+    transcript = open("transcript_8mins.txt", "r").read()
+    progress_notes = ProgressNotes(transcript)  
+    json_progress_notes = progress_notes.run_progress_notes()
+
+    client_presentation = json_progress_notes['progress_notes'][0]['client_presentation']
+    recommended_text_1 = " ".join([f'<span class="recommendedtext">{item}</span>' for item in client_presentation])
+    recommendation_1_placeholder.markdown(f'<p>Recommended: {recommended_text_1}</p>', unsafe_allow_html=True)
+
+    response_to_treatment = json_progress_notes['progress_notes'][0]['response_to_treatment']
+    recommended_text_2 = " ".join([f'<span class="recommendedtext">{item}</span>' for item in response_to_treatment])
+    recommendation_2_placeholder.markdown(f'<p>Recommended: {recommended_text_2}</p>', unsafe_allow_html=True)
+
+    client_status = json_progress_notes['progress_notes'][0]['client_status']
+    recommended_text_3 = " ".join([f'<span class="recommendedtext">{item}</span>' for item in client_status])
+    recommendation_3_placeholder.markdown(f'<p>Recommended: {recommended_text_3}</p>', unsafe_allow_html=True)
+
+    risk_assessment = json_progress_notes['progress_notes'][0]['risk_assessment']
+    recommended_text_4 = " ".join([f'<span class="recommendedtext">{item}</span>' for item in risk_assessment])
+    recommendation_4_placeholder.markdown(f'<p>Recommended: {recommended_text_4}</p>', unsafe_allow_html=True)
+    # with section_1[0]:
+    #     option_1 = st.checkbox('Anxious')
+    #     option_2 = st.checkbox('Confused')
+    #     option_3 = st.checkbox('Energetic')
+    #     option_4 = st.checkbox('Worried')
+
+    # with section_1[1]:
+    #     option_5 = st.checkbox('Fearful')
+    #     option_6 = st.checkbox('Cooperative', key="cooperative_1")
+    #     option_7 = st.checkbox('Withdrawn')
+
+    # with section_1[2]:
+    #     option_8 = st.checkbox('Lethargic')
+    #     option_9 = st.checkbox('Relaxed')
+    #     option_10 = st.checkbox('Depressed')
+
+    # client_presentation = json_progress_notes['progress_notes'][0]['client_presentation']
+
+    # recommended_text = " ".join([f'<span class="recommendedtext">{item}</span>' for item in client_presentation])
+
+    # # Display the recommendation dynamically in markdown
+    # st.markdown(f'<p>Recommended: {recommended_text}</p>', unsafe_allow_html=True)
+
+    # # recommendation_1 = st.markdown('<p>Recommended: <span class="recommendedtext">Anxious</span> <span class="recommendedtext">Fearful</span></p>', unsafe_allow_html=True)
+
+    # st.markdown("###### Response To Treatment")
+    # section_2 = st.columns(2)
+    # with section_2[0]:
+    #     option_11 = st.checkbox('Cooperative', key="cooperative_2")
+    #     option_12 = st.checkbox('Uninterested')
+    #     option_13 = st.checkbox('Receptive')
+    # with section_2[1]:
+    #     option_14 = st.checkbox('Combative')
+    #     option_15 = st.checkbox('Engaged')
+
+    # recommendation_2 = st.markdown('<p>Recommended: <span class="recommendedtext">Engaged</span> <span class="recommendedtext">Receptive</span></p>', unsafe_allow_html=True)
+
+    # st.markdown("###### Client Status")
+    # section_3 = st.columns(2)
+    # with section_3[0]:
+    #     option_16 = st.checkbox('Improving', key="improving")
+    #     option_17 = st.checkbox('Unchanged', key="unchanged")
+    # with section_3[1]:
+    #     option_18 = st.checkbox('Regressed', key="regressed")
+    #     option_19 = st.checkbox('Deteriorating')
+    # recommendation_3 = st.markdown('<p>Recommended: <span class="recommendedtext">Unchanged</span></p>', unsafe_allow_html=True)
+
+    # st.markdown("###### Risk Assessment")
+    # section_4 = st.columns(2)
+    # with section_4[0]:
+    #     option_20 = st.checkbox('Attempted to Cause Harm')
+    #     option_21 = st.checkbox('Intention to Cause Harm')
+    #     option_23 = st.checkbox('Suicidal Ideation')
+    # with section_4[1]:
+    #     option_24 = st.checkbox('Danger to Self')
+    #     option_25 = st.checkbox('Danger to Other')
+    #     option_26 = st.checkbox('Plan to Cause Harm')
+    # recommendation_4 = st.markdown('<p>Recommended: <span class="recommendedtext">Intention to Cause Harm</span></p>', unsafe_allow_html=True)
 
 with right_col:
     # Output column
