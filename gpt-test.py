@@ -1,9 +1,10 @@
 import json
+import traceback
 import streamlit as st
 
-from src import llama_inference
-from tempfile import NamedTemporaryFile
-from src.notes_inference import ProgressNotes
+from src import utils
+from src.db_handler import DBConnector
+from src.llama_inference import CaseNotesGenerator
 
 st.set_page_config(page_title="Case Crafter",layout="wide")
 
@@ -13,41 +14,38 @@ template_dict = {
     "BIRP": "birp.json"
 }
 
-def load_css(file_name):
-    with open(file_name) as f:
-        st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
+utils.load_css('./src/css_styles/style.css')
 
-load_css('./src/css_styles/style.css')
+try:
+    st.markdown("<h1 style='text-align: center;'>Case Crafter</h1>", unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align: center;'>Your AI Therapist Ally</h2>", unsafe_allow_html=True)
+    st.markdown("---")
 
-st.markdown("<h1 style='text-align: center;'>Case Crafter</h1>", unsafe_allow_html=True)
-st.markdown("<h2 style='text-align: center;'>Your AI Therapist Ally</h2>", unsafe_allow_html=True)
-st.markdown("---")
-
-# name section
-st.markdown("""
-<div class="box">
-    <div class="row">
-        <div class="item"><strong>Client: John Doe</strong></div>
-        <div class="item"><strong>Date: 11 October 2024</strong></div>
-        <div class="item"><strong>Start Time: 10:00 AM</strong></div>
+    # name section
+    st.markdown("""
+    <div class="box">
+        <div class="row">
+            <div class="item"><strong>Client: John Doe</strong></div>
+            <div class="item"><strong>Date: 11 October 2024</strong></div>
+            <div class="item"><strong>Start Time: 10:00 AM</strong></div>
+        </div>
     </div>
-</div>
-""", unsafe_allow_html=True)
+    """, unsafe_allow_html=True)
 
 
-left_col, right_col = st.columns([4, 6])
+    left_col, right_col = st.columns([4, 6])
 
-# Left column (col1) can have multiple items
-with left_col:
-    st.markdown('')
-    st.markdown("##### Upload Audio")
-    audio_file = st.file_uploader("Upload an audio file", type=["mp3"])
+    # Left column (col1) can have multiple items
+    with left_col:
+        st.markdown('')
+        st.markdown("##### Upload Audio")
+        audio_file = st.file_uploader("Upload an audio file", type=["mp3"])
 
-    st.markdown("##### Template Style")
-    user_template_option = st.selectbox('Select your preferred template style',('SOAP', 'DAP', 'BIRP'))
-    st.write('You selected:', user_template_option)
+        st.markdown("##### Template Style")
+        user_template_option = st.selectbox('Select your preferred template style',('SOAP', 'DAP', 'BIRP'))
+        st.write('You selected:', user_template_option)
 
-    st.markdown("#### Progress Notes")
+        st.markdown("#### Progress Notes")
 
     st.markdown("###### Client Presentation")
     section_1 = st.columns(3)
@@ -67,15 +65,15 @@ with left_col:
 
     recommendation_1_placeholder = st.markdown("Recommended:", unsafe_allow_html=True)
 
-    st.markdown("###### Response To Treatment")
-    section_2 = st.columns(2)
-    with section_2[0]:
-        option_11 = st.checkbox('Cooperative', key="cooperative_2")
-        option_12 = st.checkbox('Uninterested')
-        option_13 = st.checkbox('Receptive')
-    with section_2[1]:
-        option_14 = st.checkbox('Combative')
-        option_15 = st.checkbox('Engaged')
+        st.markdown("###### Response To Treatment")
+        section_2 = st.columns(2)
+        with section_2[0]:
+            option_11 = st.checkbox('Cooperative', key="cooperative_2")
+            option_12 = st.checkbox('Uninterested')
+            option_13 = st.checkbox('Receptive')
+        with section_2[1]:
+            option_14 = st.checkbox('Combative')
+            option_15 = st.checkbox('Engaged')
 
     recommendation_2_placeholder = st.markdown("Recommended:", unsafe_allow_html=True)
 
@@ -181,60 +179,76 @@ with left_col:
     #     option_26 = st.checkbox('Plan to Cause Harm')
     # recommendation_4 = st.markdown('<p>Recommended: <span class="recommendedtext">Intention to Cause Harm</span></p>', unsafe_allow_html=True)
 
-with right_col:
-    # Output column
-    with st.container():
-        section_lst = []
-        description_lst = []
-        content_lst= []
-        st.markdown("#### Case Notes")
+    with right_col:
+        # Output column
+        with st.container():
+            section_lst = []
+            description_lst = []
+            content_lst= []
+            st.markdown("#### Case Notes")
 
-        if user_template_option in template_dict:
-            json_template_file = template_dict[user_template_option]
-        json_file = "./src/dependencies/{}".format(json_template_file)
-        with open(json_file, 'r') as file:
-            data = json.load(file)
-            for section, details in data['sections'].items():
-                section_lst.append(section)
-                description_lst.append(details['description'])
-                content_lst.append(details["content"])
-        placeholders = {}
+            if user_template_option in template_dict:
+                json_template_file = template_dict[user_template_option]
+            json_file = "./src/dependencies/{}".format(json_template_file)
+            with open(json_file, 'r') as file:
+                data = json.load(file)
+                for section, details in data['sections'].items():
+                    section_lst.append(section)
+                    description_lst.append(details['description'])
+                    content_lst.append(details["content"])
+            placeholders = {}
 
-        text="Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."
-        if len(section_lst) > 0 and len(description_lst) > 0: 
-            # Create a bordered section for each section and its description
-            l = ['']
-            for key, description in zip(section_lst, description_lst):
-                l.append(
+            text="Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."
+            if len(section_lst) > 0 and len(description_lst) > 0: 
+                # Create a bordered section for each section and its description
+                l = ['']
+                for key, description in zip(section_lst, description_lst):
+                    l.append(
+                        """
+                            <h4>{}</h4>
+                            <p>{}</p>
+                            <p>Content: {}</p>
+                            <div id="content-{}"></div>
+                        """.format(key, description, text, key))
+                st.markdown(
                     """
-                        <h4>{}</h4>
-                        <p>{}</p>
-                        <p>Content: {}</p>
-                        <div id="content-{}"></div>
-                    """.format(key, description, text, key))
-            st.markdown(
-                """
-                    <div style="border: 1px solid #BEC6A0; padding: 10px; border-radius: 5px; margin-bottom: 10px; background-color: white;box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2)">
-                        {}
-                    </div>
-                """.format('<br     >'.join(l)), unsafe_allow_html=True)
+                        <div style="border: 1px solid #BEC6A0; padding: 10px; border-radius: 5px; margin-bottom: 10px; background-color: white;box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2)">
+                            {}
+                        </div>
+                    """.format('<br     >'.join(l)), unsafe_allow_html=True)
 
-    col1, col2, col3, col4 = st.columns([3,3,0.5,0.5])
-    with col1:
-        if st.button(":thumbsup:"):
-            print("I have been liked")
-    with col2:
-        if st.button(":thumbsdown:"):
-            print("I have been disliked")
-        # Custom CSS to align button to the right
-    with col4:
-        st.markdown("""
-            <style>
-            .stButton button {
-                float: right;
-            }
-            </style>
-            """, unsafe_allow_html=True)
+        col1, col2, col3, col4 = st.columns([3,3,0.5,0.5])
+        with col1:
+            if st.button(":thumbsup:"):
+                print("I have been liked")
+        with col2:
+            if st.button(":thumbsdown:"):
+                print("I have been disliked")
+            # Custom CSS to align button to the right
+        with col4:
+            st.markdown("""
+                <style>
+                .stButton button {
+                    float: right;
+                }
+                </style>
+                """, unsafe_allow_html=True)
 
-        if st.button("⚡ Generate"):
-            st.write("Button clicked!")
+            if st.button("⚡ Generate"):
+                with st.spinner("Loading Data..."):
+                    if audio_file is not None:
+                        # upload file and get transcription from whisper
+
+                        #sample transcription for testing, replace with whisper transcription
+                        audio_transcription = utils.read_transcript("./src/dependencies/sample_transcript_8mins.txt")
+                        print(audio_transcription)
+                        # pass transcription to llama
+                        user_template_option = user_template_option.lower()
+                        # pull values from llama output to update case notes and progress notes (update recommended and checkbox if can)
+                        notes_template = utils.load_template(f"./src/dependencies/{user_template_option}")
+                        notes_generator = CaseNotesGenerator(audio_transcription, notes_template)
+                        case_notes = notes_generator.get_notes()
+
+                        print(case_notes)
+except Exception as e:
+    print(traceback.format_exc())
