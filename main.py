@@ -1,7 +1,8 @@
 import json
 import streamlit as st
 
-from src import llama_inference
+from src import utils
+from src.llama_inference import CaseNotesGenerator
 from tempfile import NamedTemporaryFile
 
 st.set_page_config(page_title="Case Crafter",layout="wide")
@@ -120,8 +121,7 @@ try:
                 print(f"{key}")
                 print(f"{description}\n")
                 st.write("#### {}".format(key))
-                st.write("##### {}".format(description))
-                st.write("##### Content :")
+                st.write("##### ")
                 placeholders[key] = st.empty()
                 st.write("")
                 st.write("---")
@@ -130,11 +130,18 @@ try:
         with st.spinner('Loading data...'):
             if audio_file is not None:
                 # upload file and get transcription from whisper
-                pass
+
+                #sample transcription for testing, replace with whisper transcription
+                audio_transcription = utils.read_transcript("{src/dependencies}/sample_transcript.txt")
+
                 # pass transcription to llama
                 # pull values from llama output to update case notes and progress notes (update recommended and checkbox if can)
+                notes_template = utils.load_template(f"src/dependencies/{user_template_option}")
+                notes_generator = CaseNotesGenerator(audio_transcription, notes_template)
+                case_notes = notes_generator.get_notes()
+
             for key in section_lst:
-                print(key)
-                placeholders[key].write(f"Hello from {key}")
+                placeholders[key].write(case_notes[key])
+
 except Exception as e:
     print(e)
