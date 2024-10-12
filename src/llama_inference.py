@@ -11,11 +11,6 @@ from pydantic import create_model
 
 load_dotenv()
 
-client = OpenAI(
-    api_key=os.getenv("DATABRICKS_TOKEN"),
-    base_url= f"https://{os.getenv('DATABRICKS_SERVER_HOSTNAME')}/serving-endpoints"
-)
-
 class CaseNotesGenerator:
 
     def __init__(self, transcript, template):
