@@ -1,10 +1,11 @@
-from databricks import sql
 import datetime
 import os
 
+from databricks import sql
+
 class DBConnector:
     def __init__(self):
-        self.server_hostname = os.getenv("DATABRICKS_SERVER_HOSTNAME")
+        self.server_hostname = os.getenv("DATABRICKS_HOST")
         self.http_path = os.getenv("DATABRICKS_HTTP_PATH")
         self.access_token = os.getenv("DATABRICKS_DB_TOKEN")
         self.connection = None

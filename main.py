@@ -1,11 +1,12 @@
 import json
-import streamlit as st
 import traceback
-
-from src.db_handler import DBConnector
-from src import utils
-from src.llama_inference import CaseNotesGenerator
 from tempfile import NamedTemporaryFile
+
+import streamlit as st
+
+from src import utils
+from src.db_handler import DBConnector
+from src.llama_inference import CaseNotesGenerator
 
 st.set_page_config(page_title="Case Crafter",layout="wide")
 
@@ -134,7 +135,7 @@ try:
                 # upload file and get transcription from whisper
 
                 #sample transcription for testing, replace with whisper transcription
-                audio_transcription = utils.read_transcript("src/dependencies/sample_transcript.txt")
+                audio_transcription = utils.read_transcript("src/dependencies/sample_transcript_8mins.txt")
 
                 # pass transcription to llama
                 # pull values from llama output to update case notes and progress notes (update recommended and checkbox if can)
