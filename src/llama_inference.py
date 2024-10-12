@@ -5,8 +5,8 @@ from dotenv import load_dotenv
 load_dotenv()
 
 client = OpenAI(
-    api_key=os.getenv("DATABRICKS_TOKEN"),
-    base_url="https://dbc-1d50e92c-2c27.cloud.databricks.com/serving-endpoints"
+    api_key=os.getenv("DATABRICKS_LLAMA_TOKEN"),
+    base_url= f"https://{os.getenv('DATABRICKS_SERVER_HOSTNAME')}/serving-endpoints"
 )
 
 class CaseNotesGenerator:
@@ -34,14 +34,25 @@ class CaseNotesGenerator:
         for section, data in self.template['sections'].items():
             user_prompt += f"{section.capitalize()} - {data['description']}: \n\n"
         user_prompt += "Respond only with valid JSON. Do not write an introduction or summary."
+        user_prompt += """
+        Here is a sample output for the SOAP template: 
+                {
+                    "Subjective": generated notes here,
+                    "Objective": generated notes here,
+                    "Assessment": generated notes here,
+                    "Plan": generated notes here
+                }"""
 
         return user_prompt
     
     def convert_to_json(self, notes):
 
         try:
+            if 'json' in notes.lower():
+                notes.replace('json', '')
             return json.loads(notes)
         except json.JSONDecodeError as e:
+            print(notes)
             raise ValueError(f"Invalid JSON format: {e}")
         except:
             raise
