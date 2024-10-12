@@ -16,6 +16,23 @@ template_dict = {
 
 utils.load_css('./src/css_styles/style.css')
 
+def render_sections(section_lst, description_lst, content_lst):
+    l = ['']
+    for idx, (key, description) in enumerate(zip(section_lst, description_lst)):
+        content = content_lst[idx]
+        l.append(
+            """
+                <h4>{}</h4>
+                <p>{}</p>
+                <p>Content: {}</p>
+            """.format(key, description, content)
+        )
+    return """
+        <div style="border: 1px solid #BEC6A0; padding: 10px; border-radius: 5px; margin-bottom: 10px; background-color: white;box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2)">
+            {}
+        </div>
+    """.format('<br>'.join(l))
+
 try:
     st.markdown("<h1 style='text-align: center;'>Case Crafter</h1>", unsafe_allow_html=True)
     st.markdown("<h2 style='text-align: center;'>Your AI Therapist Ally</h2>", unsafe_allow_html=True)
@@ -198,50 +215,69 @@ try:
                     content_lst.append(details["content"])
             placeholders = {}
 
-            text="Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."
-            if len(section_lst) > 0 and len(description_lst) > 0: 
-                # Create a bordered section for each section and its description
-                l = ['']
-                for key, description in zip(section_lst, description_lst):
-                    l.append(
-                        """
-                            <h4>{}</h4>
-                            <p>{}</p>
-                            <p>Content: {}</p>
-                            <div id="content-{}"></div>
-                        """.format(key, description, text, key))
-                st.markdown(
-                    """
-                        <div style="border: 1px solid #BEC6A0; padding: 10px; border-radius: 5px; margin-bottom: 10px; background-color: white;box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2)">
-                            {}
-                        </div>
-                    """.format('<br     >'.join(l)), unsafe_allow_html=True)
+            if 'content_text' not in st.session_state:
+                st.session_state['content_text'] = [""] * len(section_lst)  # Empty content initially for all sections
 
-        col1, col2, col3, col4 = st.columns([3,3,0.5,0.5])
+            # Placeholder for bordered section
+            section_placeholder = st.empty()
+            section_placeholder.markdown(render_sections(section_lst, description_lst, st.session_state['content_text']), unsafe_allow_html=True)
+
+        col1, col2, col3, col4 = st.columns([1, 1, 6, 1])  # Adjusted column widths
+        #TODO: fix button layout
         with col1:
-            if st.button(":thumbsup:"):
-                print("I have been liked")
-        with col2:
-            if st.button(":thumbsdown:"):
-                print("I have been disliked")
-            # Custom CSS to align button to the right
-        with col4:
-            st.markdown("""
+            st.markdown(
+                """
                 <style>
                 .stButton button {
-                    float: right;
+                    margin-left: 0;
                 }
                 </style>
-                """, unsafe_allow_html=True)
+                """, 
+                unsafe_allow_html=True
+            )
+            if st.button(":thumbsup:"):
+                print("I have been liked")
 
+        with col2:
+            st.markdown(
+                """
+                <style>
+                .stButton button {
+                    margin-left: 0;
+                }
+                </style>
+                """, 
+                unsafe_allow_html=True
+            )
+            if st.button(":thumbsdown:"):
+                print("I have been disliked")
+
+        # Custom CSS to align button to the right
+        with col4:
+            st.markdown(
+                    """
+                    <style>
+                    .stButton button {
+                        float: right;
+                        width: 100%;  /* Take full width */
+                        white-space: nowrap;  /* Prevent breaking */
+                        padding: 10px;  /* Add padding for spacing */
+                        overflow: hidden;  /* Ensure no text overflows */
+                        text-overflow: ellipsis;  /* Add ellipsis if text is too long */
+                        font-size: 16px;  /* Adjust font size */
+                    }
+                    </style>
+                    """, 
+                    unsafe_allow_html=True
+                )
             if st.button("⚡ Generate"):
+                print("Generate clicked")
                 with st.spinner("Loading Data..."):
                     if audio_file is not None:
                         # upload file and get transcription from whisper
 
                         #sample transcription for testing, replace with whisper transcription
                         audio_transcription = utils.read_transcript("./src/dependencies/sample_transcript_8mins.txt")
-                        print(audio_transcription)
                         # pass transcription to llama
                         user_template_option = user_template_option.lower()
                         # pull values from llama output to update case notes and progress notes (update recommended and checkbox if can)
@@ -249,6 +285,16 @@ try:
                         notes_generator = CaseNotesGenerator(audio_transcription, notes_template)
                         case_notes = notes_generator.get_notes()
 
+                        # iterate inference output and update content accordingly
+                        content_lst = []
+                        for key, value in case_notes.items():
+                            content_lst.append(value)
+
+                        for i in range(len(content_lst)):
+                            st.session_state['content_text'][i] = f"{content_lst[i]}"                        # render_sections()
+                        section_placeholder.markdown(render_sections(section_lst, description_lst, st.session_state['content_text']), unsafe_allow_html=True)
+
                         print(case_notes)
+
 except Exception as e:
     print(traceback.format_exc())
