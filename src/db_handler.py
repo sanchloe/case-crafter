@@ -9,7 +9,7 @@ class DBConnector:
         self.http_path = os.getenv("DATABRICKS_HTTP_PATH")
         self.access_token = os.getenv("DATABRICKS_DB_TOKEN")
         self.connection = None
-
+        
     def connect(self):
         try:
             self.connection = sql.connect(
@@ -38,6 +38,25 @@ class DBConnector:
                 print("Data successfully submitted to Databricks.")
         except Exception as e:
             raise Exception(f"Failed to insert data: {e}")
+        
+    def insert_progress_notes(self, therapist_id, client_name, client_id, client_presentation, response_treatment, client_status, risk_assesment):
+        if self.connection is None:
+            raise Exception("No database connection. Please connect first.")
+
+        timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+        insert_query = """
+        INSERT INTO progress_notes (therapist_id, client_name, client_id, client_presentation, response_treatment, client_status, risk_assesment, timestamp)
+        VALUES (?, ?, ?, ?)
+        """
+        try:
+            with self.connection.cursor() as cursor:
+                cursor.execute(insert_query, (
+                    therapist_id, client_name, client_id, client_presentation, response_treatment, client_status, risk_assesment, timestamp))
+                print("Data successfully submitted to Databricks.")
+        except Exception as e:
+            raise Exception(f"Failed to insert data: {e}")
+
 
     def close(self):
         if self.connection:

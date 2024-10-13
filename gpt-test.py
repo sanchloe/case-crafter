@@ -1,9 +1,13 @@
 import json
 import streamlit as st
-
+import whisper
 from src import llama_inference
 from tempfile import NamedTemporaryFile
 from src.notes_inference import ProgressNotes
+from src.db_handler import DBConnector
+from src.utils import save_audio_file
+import os
+from src.speech_inference import SpeechToText
 
 st.set_page_config(page_title="Case Crafter",layout="wide")
 
@@ -16,6 +20,9 @@ template_dict = {
 def load_css(file_name):
     with open(file_name) as f:
         st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
+
+whisper_model = whisper.load_model("base") 
+
 
 load_css('./src/css_styles/style.css')
 
@@ -41,7 +48,9 @@ left_col, right_col = st.columns([4, 6])
 with left_col:
     st.markdown('')
     st.markdown("##### Upload Audio")
-    audio_file = st.file_uploader("Upload an audio file", type=["mp3"])
+    audio_file = st.file_uploader("Upload Audio", type=["mp3", "mp4", "wav", "m4a"])
+    if audio_file:
+        save_audio_file(audio_file.read(), "mp3")
 
     st.markdown("##### Template Style")
     user_template_option = st.selectbox('Select your preferred template style',('SOAP', 'DAP', 'BIRP'))
@@ -103,83 +112,15 @@ with left_col:
 
     recommendation_4_placeholder = st.markdown("Recommended:", unsafe_allow_html=True)
 
-    transcript = open("transcript_8mins.txt", "r").read()
-    progress_notes = ProgressNotes(transcript)  
-    json_progress_notes = progress_notes.run_progress_notes()
 
-    client_presentation = json_progress_notes['progress_notes'][0]['client_presentation']
-    recommended_text_1 = " ".join([f'<span class="recommendedtext">{item}</span>' for item in client_presentation])
-    recommendation_1_placeholder.markdown(f'<p>Recommended: {recommended_text_1}</p>', unsafe_allow_html=True)
+    # db_connector = DBConnector()
 
-    response_to_treatment = json_progress_notes['progress_notes'][0]['response_to_treatment']
-    recommended_text_2 = " ".join([f'<span class="recommendedtext">{item}</span>' for item in response_to_treatment])
-    recommendation_2_placeholder.markdown(f'<p>Recommended: {recommended_text_2}</p>', unsafe_allow_html=True)
+    # try:
+    #     db_connector.connect()
+    #     db_connector.insert_progress_notes('t1234', "John Doe", "c1234", ",".join(client_presentation), ",".join(response_to_treatment), ",".join(client_status), ",".join(risk_assessment))
+    # finally:
+    #     db_connector.close()
 
-    client_status = json_progress_notes['progress_notes'][0]['client_status']
-    recommended_text_3 = " ".join([f'<span class="recommendedtext">{item}</span>' for item in client_status])
-    recommendation_3_placeholder.markdown(f'<p>Recommended: {recommended_text_3}</p>', unsafe_allow_html=True)
-
-    risk_assessment = json_progress_notes['progress_notes'][0]['risk_assessment']
-    recommended_text_4 = " ".join([f'<span class="recommendedtext">{item}</span>' for item in risk_assessment])
-    recommendation_4_placeholder.markdown(f'<p>Recommended: {recommended_text_4}</p>', unsafe_allow_html=True)
-    # with section_1[0]:
-    #     option_1 = st.checkbox('Anxious')
-    #     option_2 = st.checkbox('Confused')
-    #     option_3 = st.checkbox('Energetic')
-    #     option_4 = st.checkbox('Worried')
-
-    # with section_1[1]:
-    #     option_5 = st.checkbox('Fearful')
-    #     option_6 = st.checkbox('Cooperative', key="cooperative_1")
-    #     option_7 = st.checkbox('Withdrawn')
-
-    # with section_1[2]:
-    #     option_8 = st.checkbox('Lethargic')
-    #     option_9 = st.checkbox('Relaxed')
-    #     option_10 = st.checkbox('Depressed')
-
-    # client_presentation = json_progress_notes['progress_notes'][0]['client_presentation']
-
-    # recommended_text = " ".join([f'<span class="recommendedtext">{item}</span>' for item in client_presentation])
-
-    # # Display the recommendation dynamically in markdown
-    # st.markdown(f'<p>Recommended: {recommended_text}</p>', unsafe_allow_html=True)
-
-    # # recommendation_1 = st.markdown('<p>Recommended: <span class="recommendedtext">Anxious</span> <span class="recommendedtext">Fearful</span></p>', unsafe_allow_html=True)
-
-    # st.markdown("###### Response To Treatment")
-    # section_2 = st.columns(2)
-    # with section_2[0]:
-    #     option_11 = st.checkbox('Cooperative', key="cooperative_2")
-    #     option_12 = st.checkbox('Uninterested')
-    #     option_13 = st.checkbox('Receptive')
-    # with section_2[1]:
-    #     option_14 = st.checkbox('Combative')
-    #     option_15 = st.checkbox('Engaged')
-
-    # recommendation_2 = st.markdown('<p>Recommended: <span class="recommendedtext">Engaged</span> <span class="recommendedtext">Receptive</span></p>', unsafe_allow_html=True)
-
-    # st.markdown("###### Client Status")
-    # section_3 = st.columns(2)
-    # with section_3[0]:
-    #     option_16 = st.checkbox('Improving', key="improving")
-    #     option_17 = st.checkbox('Unchanged', key="unchanged")
-    # with section_3[1]:
-    #     option_18 = st.checkbox('Regressed', key="regressed")
-    #     option_19 = st.checkbox('Deteriorating')
-    # recommendation_3 = st.markdown('<p>Recommended: <span class="recommendedtext">Unchanged</span></p>', unsafe_allow_html=True)
-
-    # st.markdown("###### Risk Assessment")
-    # section_4 = st.columns(2)
-    # with section_4[0]:
-    #     option_20 = st.checkbox('Attempted to Cause Harm')
-    #     option_21 = st.checkbox('Intention to Cause Harm')
-    #     option_23 = st.checkbox('Suicidal Ideation')
-    # with section_4[1]:
-    #     option_24 = st.checkbox('Danger to Self')
-    #     option_25 = st.checkbox('Danger to Other')
-    #     option_26 = st.checkbox('Plan to Cause Harm')
-    # recommendation_4 = st.markdown('<p>Recommended: <span class="recommendedtext">Intention to Cause Harm</span></p>', unsafe_allow_html=True)
 
 with right_col:
     # Output column
@@ -238,3 +179,34 @@ with right_col:
 
         if st.button("⚡ Generate"):
             st.write("Button clicked!")
+            #Run whisper model
+            audio_file_path = max(
+                [f for f in os.listdir(".") if f.startswith("audio")],
+                key=os.path.getctime,
+            )
+            print('TOYCH', audio_file_path)
+            get_transcript = SpeechToText(audio_file_path) 
+            # Transcribe the audio file
+            transcript = get_transcript.transcribe_audio(whisper_model)
+            print(transcript)
+            #TO DELETE ------
+            # transcript = open("transcript_8mins.txt", "r").read()
+            #--------------
+            progress_notes = ProgressNotes(transcript)  
+            json_progress_notes = progress_notes.run_progress_notes()
+
+            client_presentation = json_progress_notes['progress_notes'][0]['client_presentation']
+            recommended_text_1 = " ".join([f'<span class="recommendedtext">{item}</span>' for item in client_presentation])
+            recommendation_1_placeholder.markdown(f'<p>Recommended: {recommended_text_1}</p>', unsafe_allow_html=True)
+
+            response_to_treatment = json_progress_notes['progress_notes'][0]['response_to_treatment']
+            recommended_text_2 = " ".join([f'<span class="recommendedtext">{item}</span>' for item in response_to_treatment])
+            recommendation_2_placeholder.markdown(f'<p>Recommended: {recommended_text_2}</p>', unsafe_allow_html=True)
+
+            client_status = json_progress_notes['progress_notes'][0]['client_status']
+            recommended_text_3 = " ".join([f'<span class="recommendedtext">{item}</span>' for item in client_status])
+            recommendation_3_placeholder.markdown(f'<p>Recommended: {recommended_text_3}</p>', unsafe_allow_html=True)
+
+            risk_assessment = json_progress_notes['progress_notes'][0]['risk_assessment']
+            recommended_text_4 = " ".join([f'<span class="recommendedtext">{item}</span>' for item in risk_assessment])
+            recommendation_4_placeholder.markdown(f'<p>Recommended: {recommended_text_4}</p>', unsafe_allow_html=True)

@@ -1,7 +1,7 @@
 import json
 from dotenv import load_dotenv
 from langchain_databricks import ChatDatabricks
-
+import datetime
 load_dotenv()
 
 def read_transcript(file_path):
@@ -18,3 +18,12 @@ def load_model(endpoint, temperature):
     endpoint = endpoint,
     temperature = temperature)
     return model
+
+def save_audio_file(audio_bytes, file_extension):
+    timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    file_name = f"audio_{timestamp}.{file_extension}"
+
+    with open(file_name, "wb") as f:
+        f.write(audio_bytes)
+
+    return file_name
