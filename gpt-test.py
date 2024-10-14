@@ -1,22 +1,14 @@
+import os
 import json
+import whisper
 import traceback
 import streamlit as st
 
 from src import utils
 from src.db_handler import DBConnector
+from src.speech_inference import SpeechToText
 from src.notes_inference import ProgressNotes
 from src.llama_inference import CaseNotesGenerator
-
-import json
-import streamlit as st
-import whisper
-from src import llama_inference
-from tempfile import NamedTemporaryFile
-from src.notes_inference import ProgressNotes
-from src.db_handler import DBConnector
-from src.utils import save_audio_file
-import os
-from src.speech_inference import SpeechToText
 
 st.set_page_config(page_title="Case Crafter",layout="wide")
 
@@ -27,7 +19,7 @@ template_dict = {
 }
 
 utils.load_css('./src/css_styles/style.css')
-whisper_model = whisper.load_model("base") 
+whisper_model = whisper.load_model("base")
 
 def render_sections(section_lst, description_lst, content_lst):
     l = ['']
@@ -77,7 +69,7 @@ try:
         st.markdown("##### Upload Audio")
         audio_file = st.file_uploader("Upload Audio", type=["mp3", "mp4", "wav", "m4a"])
         if audio_file:
-            save_audio_file(audio_file.read(), "mp3")
+            utils.save_audio_file(audio_file.read(), "mp3")
 
         st.markdown("##### Template Style")
         user_template_option = st.selectbox('Select your preferred template style',('SOAP', 'DAP', 'BIRP'))
@@ -175,7 +167,7 @@ try:
                     margin-left: 0;
                 }
                 </style>
-                """, 
+                """,
                 unsafe_allow_html=True
             )
             if st.button(":thumbsup:"):
@@ -189,7 +181,7 @@ try:
                     margin-left: 0;
                 }
                 </style>
-                """, 
+                """,
                 unsafe_allow_html=True
             )
             if st.button(":thumbsdown:"):
@@ -210,7 +202,7 @@ try:
                         font-size: 16px;  /* Adjust font size */
                     }
                     </style>
-                    """, 
+                    """,
                     unsafe_allow_html=True
                 )
             if st.button("⚡ Generate"):
@@ -241,16 +233,16 @@ try:
                         # get progress notes output
                         progress_notes = ProgressNotes(transcript)
                         json_progress_notes = progress_notes.run_progress_notes()
-                        # iterate inference output and update content accordingly
+
+                        # update case notes
                         content_lst = []
                         for key, value in case_notes.items():
                             content_lst.append(value)
-
                         for i in range(len(content_lst)):
                             st.session_state['content_text'][i] = f"{content_lst[i]}"
                         section_placeholder.markdown(render_sections(section_lst, description_lst, st.session_state['content_text']), unsafe_allow_html=True)
 
-                        # Update the placeholders using the helper function
+                        # update progress notes
                         client_presentation = json_progress_notes['progress_notes'][0]['client_presentation']
                         update_recommendations(recommendation_1_placeholder, client_presentation, "Recommended")
 
@@ -262,8 +254,6 @@ try:
 
                         risk_assessment = json_progress_notes['progress_notes'][0]['risk_assessment']
                         update_recommendations(recommendation_4_placeholder, risk_assessment, "Recommended")
-
-                        print(case_notes)
 
 except Exception as e:
     print(traceback.format_exc())
