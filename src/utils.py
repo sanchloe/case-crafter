@@ -1,4 +1,5 @@
 import json
+import datetime
 import streamlit as st
 
 from dotenv import load_dotenv
@@ -24,3 +25,12 @@ def load_model(endpoint, temperature):
 def load_css(file_name):
     with open(file_name) as f:
         st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
+
+def save_audio_file(audio_bytes, file_extension):
+    timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    file_name = f"audio_{timestamp}.{file_extension}"
+
+    with open(file_name, "wb") as f:
+        f.write(audio_bytes)
+
+    return file_name

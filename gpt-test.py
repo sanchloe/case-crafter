@@ -7,6 +7,17 @@ from src.db_handler import DBConnector
 from src.notes_inference import ProgressNotes
 from src.llama_inference import CaseNotesGenerator
 
+import json
+import streamlit as st
+import whisper
+from src import llama_inference
+from tempfile import NamedTemporaryFile
+from src.notes_inference import ProgressNotes
+from src.db_handler import DBConnector
+from src.utils import save_audio_file
+import os
+from src.speech_inference import SpeechToText
+
 st.set_page_config(page_title="Case Crafter",layout="wide")
 
 template_dict = {
@@ -16,6 +27,7 @@ template_dict = {
 }
 
 utils.load_css('./src/css_styles/style.css')
+whisper_model = whisper.load_model("base") 
 
 def render_sections(section_lst, description_lst, content_lst):
     l = ['']
@@ -63,7 +75,9 @@ try:
     with left_col:
         st.markdown('')
         st.markdown("##### Upload Audio")
-        audio_file = st.file_uploader("Upload an audio file", type=["mp3"])
+        audio_file = st.file_uploader("Upload Audio", type=["mp3", "mp4", "wav", "m4a"])
+        if audio_file:
+            save_audio_file(audio_file.read(), "mp3")
 
         st.markdown("##### Template Style")
         user_template_option = st.selectbox('Select your preferred template style',('SOAP', 'DAP', 'BIRP'))
@@ -203,20 +217,29 @@ try:
                 print("Generate clicked")
                 with st.spinner("Loading Data..."):
                     if audio_file is not None:
-                        # upload file and get transcription from whisper
+                        #Run whisper model
+                        audio_file = max(
+                            [f for f in os.listdir(".") if f.startswith("audio")],
+                            key=os.path.getctime,
+                        )
+                        print('TOYCH', audio_file)
+                        get_transcript = SpeechToText(audio_file)
+                        transcript = get_transcript.transcribe_audio(whisper_model)
+                        print(transcript)
 
-                        #sample transcription for testing, replace with whisper transcription
-                        audio_transcription = utils.read_transcript("./src/dependencies/sample_transcript_8mins.txt")
+                        # TO DELETE ------
+                        # audio_transcription = utils.read_transcript("./src/dependencies/sample_transcript_8mins.txt")
+                        # -----------
+
                         # pass transcription to llama
                         user_template_option = user_template_option.lower()
                         # get case notes output
                         notes_template = utils.load_template(f"./src/dependencies/{user_template_option}")
-                        notes_generator = CaseNotesGenerator(audio_transcription, notes_template)
+                        notes_generator = CaseNotesGenerator(transcript, notes_template)
                         case_notes = notes_generator.get_notes()
 
                         # get progress notes output
-                        transcript = open("transcript_8mins.txt", "r").read()
-                        progress_notes = ProgressNotes(transcript)  
+                        progress_notes = ProgressNotes(transcript)
                         json_progress_notes = progress_notes.run_progress_notes()
                         # iterate inference output and update content accordingly
                         content_lst = []
