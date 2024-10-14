@@ -228,12 +228,12 @@ try:
                             key=os.path.getctime,
                         )
                         print('TOYCH', audio_file)
-                        # get_transcript = SpeechToText(audio_file)
-                        # transcript = get_transcript.transcribe_audio(whisper_model)
-                        # print(transcript)
+                        get_transcript = SpeechToText(audio_file)
+                        transcript = get_transcript.transcribe_audio(whisper_model)
+                        print(transcript)
 
                         # TO DELETE ------
-                        transcript = utils.read_transcript("./src/dependencies/sample_transcript_8mins.txt")
+                        # transcript = utils.read_transcript("./src/dependencies/sample_transcript_8mins.txt")
                         # -----------
 
                         # pass transcription to llama
