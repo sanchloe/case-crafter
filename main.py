@@ -63,7 +63,16 @@ try:
 
     left_col, right_col = st.columns([4, 6])
 
-    # Left column (col1) can have multiple items
+     # Initialize session state for recommendation text
+    if 'client_presentation' not in st.session_state:
+        st.session_state['client_presentation'] = '<p>Recommended: </p>'
+    if 'response_to_treatment' not in st.session_state:
+        st.session_state['response_to_treatment'] = '<p>Recommended: </p>'
+    if 'client_status' not in st.session_state:
+        st.session_state['client_status'] = '<p>Recommended: </p>'
+    if 'risk_assessment' not in st.session_state:
+        st.session_state['risk_assessment'] = '<p>Recommended: </p>'
+
     with left_col:
         st.markdown('')
         st.markdown("##### Upload Audio")
@@ -93,7 +102,8 @@ try:
             option_9 = st.checkbox('Relaxed')
             option_10 = st.checkbox('Depressed')
 
-        recommendation_1_placeholder = st.markdown("Recommended:", unsafe_allow_html=True)
+        recommendation_1_placeholder = st.empty()
+        recommendation_1_placeholder.markdown(st.session_state['client_presentation'], unsafe_allow_html=True)
 
         st.markdown("###### Response To Treatment")
         section_2 = st.columns(2)
@@ -105,7 +115,8 @@ try:
             option_14 = st.checkbox('Combative')
             option_15 = st.checkbox('Engaged')
 
-        recommendation_2_placeholder = st.markdown("Recommended:", unsafe_allow_html=True)
+        recommendation_2_placeholder = st.empty()
+        recommendation_2_placeholder.markdown(st.session_state['response_to_treatment'], unsafe_allow_html=True)
 
         st.markdown("###### Client Status")
         section_3 = st.columns(2)
@@ -116,7 +127,8 @@ try:
             option_18 = st.checkbox('Regressed', key="regressed")
             option_19 = st.checkbox('Deteriorating')
 
-        recommendation_3_placeholder = st.markdown("Recommended:", unsafe_allow_html=True)
+        recommendation_3_placeholder = st.empty()
+        recommendation_3_placeholder.markdown(st.session_state['client_status'], unsafe_allow_html=True)
 
         st.markdown("###### Risk Assessment")
         section_4 = st.columns(2)
@@ -129,7 +141,8 @@ try:
             option_25 = st.checkbox('Danger to Other')
             option_26 = st.checkbox('Plan to Cause Harm')
 
-        recommendation_4_placeholder = st.markdown("Recommended:", unsafe_allow_html=True)
+        recommendation_4_placeholder = st.empty()
+        recommendation_4_placeholder.markdown(st.session_state['risk_assessment'], unsafe_allow_html=True)
 
     with right_col:
         # Output column
@@ -220,7 +233,7 @@ try:
                         print(transcript)
 
                         # TO DELETE ------
-                        # audio_transcription = utils.read_transcript("./src/dependencies/sample_transcript_8mins.txt")
+                        # transcript = utils.read_transcript("./src/dependencies/sample_transcript_8mins.txt")
                         # -----------
 
                         # pass transcription to llama
@@ -244,15 +257,25 @@ try:
 
                         # update progress notes
                         client_presentation = json_progress_notes['progress_notes'][0]['client_presentation']
-                        update_recommendations(recommendation_1_placeholder, client_presentation, "Recommended")
-
                         response_to_treatment = json_progress_notes['progress_notes'][0]['response_to_treatment']
-                        update_recommendations(recommendation_2_placeholder, response_to_treatment, "Recommended")
-
                         client_status = json_progress_notes['progress_notes'][0]['client_status']
-                        update_recommendations(recommendation_3_placeholder, client_status, "Recommended")
-
                         risk_assessment = json_progress_notes['progress_notes'][0]['risk_assessment']
+
+                        client_presentation_html = '<p>Recommended: ' + ' '.join([f'<span class="recommendedtext">{item}</span>' for item in client_presentation]) + '</p>'
+                        response_to_treatment_html = '<p>Recommended: ' + ' '.join([f'<span class="recommendedtext">{item}</span>' for item in response_to_treatment]) + '</p>'
+                        client_status_html = '<p>Recommended: ' + ' '.join([f'<span class="recommendedtext">{item}</span>' for item in client_status]) + '</p>'
+                        risk_assessment_html = '<p>Recommended: ' + ' '.join([f'<span class="recommendedtext">{item}</span>' for item in risk_assessment]) + '</p>'
+
+                        # Update session state
+                        st.session_state['client_presentation'] = client_presentation_html
+                        st.session_state['response_to_treatment'] = response_to_treatment_html
+                        st.session_state['client_status'] = client_status_html
+                        st.session_state['risk_assessment'] = risk_assessment_html
+
+                        # Update the placeholders with the new recommendations using HTML
+                        update_recommendations(recommendation_1_placeholder, client_presentation, "Recommended")
+                        update_recommendations(recommendation_2_placeholder, response_to_treatment, "Recommended")
+                        update_recommendations(recommendation_3_placeholder, client_status, "Recommended")
                         update_recommendations(recommendation_4_placeholder, risk_assessment, "Recommended")
 
 except Exception as e:
