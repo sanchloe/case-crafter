@@ -55,7 +55,7 @@ try:
     <div class="box">
         <div class="row">
             <div class="item"><strong>Client: John Doe</strong></div>
-            <div class="item"><strong>Date: 11 October 2024</strong></div>
+            <div class="item"><strong>Date: 17 October 2024</strong></div>
             <div class="item"><strong>Start Time: 10:00 AM</strong></div>
         </div>
     </div>
@@ -205,12 +205,22 @@ try:
                 st.session_state['disliked'] = True
 
         if st.session_state['disliked']:
-            feedback_options = ['Too Long', 'Not accurate', 'Not relevant', 'Too verbose', 'Poor tone or style', 'Biased or inappropriate', 'Confusing or Unclear']
+            feedback_options = ['Too Long', 'Not accurate', 'Not relevant', 'Too verbose', 'Poor tone or style', 'Biased or inappropriate', 'Confusing or Unclear', 'Other']
             user_feedback = st.selectbox("Please tell us why you disliked it:", feedback_options)
 
-            # Print the selected option
             if user_feedback:
                 st.write(f"You selected: {user_feedback}")
+
+            if user_feedback == 'Other':
+                text_col1, save_col2 = st.columns([4, 1])
+
+                with text_col1:
+                    user_custom_feedback = st.text_input("Please provide more details")
+
+                # Save button
+                with save_col2:
+                    st.write("")
+                    save_button = st.button("💾 Save")
 
         with col4:
             st.markdown(
@@ -289,5 +299,8 @@ try:
                         update_recommendations(recommendation_3_placeholder, client_status, "Recommended")
                         update_recommendations(recommendation_4_placeholder, risk_assessment, "Recommended")
 
+            if save_button:
+                # TODO:add db code here
+                pass
 except Exception as e:
     print(traceback.format_exc())
