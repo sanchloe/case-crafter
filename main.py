@@ -170,8 +170,10 @@ try:
             section_placeholder = st.empty()
             section_placeholder.markdown(render_sections(section_lst, description_lst, st.session_state['content_text']), unsafe_allow_html=True)
 
-        col1, col2, col3, col4 = st.columns([1, 1, 6, 1])  # Adjusted column widths
-        #TODO: fix button layout
+        if 'disliked' not in st.session_state:
+            st.session_state['disliked'] = False
+        col1, col2, col3, col4 = st.columns([1, 1, 4, 1.5])
+
         with col1:
             st.markdown(
                 """
@@ -184,6 +186,7 @@ try:
                 unsafe_allow_html=True
             )
             if st.button(":thumbsup:"):
+                st.session_state['disliked'] = False
                 print("I have been liked")
 
         with col2:
@@ -199,8 +202,16 @@ try:
             )
             if st.button(":thumbsdown:"):
                 print("I have been disliked")
+                st.session_state['disliked'] = True
 
-        # Custom CSS to align button to the right
+        if st.session_state['disliked']:
+            feedback_options = ['Too Long', 'Not accurate', 'Not relevant', 'Too verbose', 'Poor tone or style', 'Biased or inappropriate', 'Confusing or Unclear']
+            user_feedback = st.selectbox("Please tell us why you disliked it:", feedback_options)
+
+            # Print the selected option
+            if user_feedback:
+                st.write(f"You selected: {user_feedback}")
+
         with col4:
             st.markdown(
                     """
