@@ -21,6 +21,13 @@ template_dict = {
 utils.load_css('./src/css_styles/style.css')
 whisper_model = whisper.load_model("base")
 
+db_connector = DBConnector()
+session_id, therapist_id, client_id, client_name = utils.setup_session()
+if "session_id" not in st.session_state: 
+    st.session_state["session_id"] = session_id
+else:
+    session_id = st.session_state["session_id"]
+
 def render_sections(section_lst, description_lst, content_lst):
     l = ['']
     for idx, (key, description) in enumerate(zip(section_lst, description_lst)):
@@ -46,15 +53,18 @@ def update_recommendations(placeholder, category_data, label):
         placeholder.markdown(f'<p>{label}: None</p>', unsafe_allow_html=True)
 
 try:
+
+    db_connector.connect()
+
     st.markdown("<h1 style='text-align: center;'>Case Crafter</h1>", unsafe_allow_html=True)
     st.markdown("<h2 style='text-align: center;'>Your AI Therapist Ally</h2>", unsafe_allow_html=True)
     st.markdown("---")
 
     # name section
-    st.markdown("""
+    st.markdown(f"""
     <div class="box">
         <div class="row">
-            <div class="item"><strong>Client: John Doe</strong></div>
+            <div class="item"><strong>Client: {client_name}</strong></div>
             <div class="item"><strong>Date: 17 October 2024</strong></div>
             <div class="item"><strong>Start Time: 10:00 AM</strong></div>
         </div>
@@ -240,6 +250,7 @@ try:
                     unsafe_allow_html=True
                 )
             if st.button("⚡ Generate"):
+
                 print("Generate clicked")
                 with st.spinner("Loading Data..."):
                     if audio_file is not None:
@@ -264,9 +275,14 @@ try:
                         notes_generator = CaseNotesGenerator(transcript, notes_template)
                         case_notes = notes_generator.get_notes()
 
+                        #push case notes to db
+                        db_connector.insert_case_notes(session_id, client_id, client_name, therapist_id, str(case_notes))
+
                         # get progress notes output
                         progress_notes = ProgressNotes(transcript)
                         json_progress_notes = progress_notes.run_progress_notes()
+
+                        #push progress notes to db here
 
                         # update case notes
                         content_lst = []
@@ -300,7 +316,9 @@ try:
                         update_recommendations(recommendation_4_placeholder, risk_assessment, "Recommended")
 
             if save_button:
-                # TODO:add db code here
-                pass
+                db_connector.update_feedback(session_id, user_custom_feedback)
+
+    db_connector.close()
+
 except Exception as e:
     print(traceback.format_exc())
