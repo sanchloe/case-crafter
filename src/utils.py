@@ -1,5 +1,6 @@
 import json
 import datetime
+import uuid
 import streamlit as st
 
 from dotenv import load_dotenv
@@ -34,3 +35,10 @@ def save_audio_file(audio_bytes, file_extension):
         f.write(audio_bytes)
 
     return file_name
+
+def setup_session():
+    client_name = "John Doe"
+    client_id = str(uuid.uuid4())
+    therapist_id = str(uuid.uuid4())
+    session_id = str(uuid.uuid4())
+    return session_id, therapist_id, client_id, client_name
