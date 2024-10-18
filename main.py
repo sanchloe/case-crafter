@@ -5,10 +5,10 @@ import traceback
 import streamlit as st
 
 from src import utils
-from src.db_handler import DBConnector
 from src.speech_inference import SpeechToText
 from src.notes_inference import ProgressNotes
-from src.llama_inference import CaseNotesGenerator
+from src.services.db_handler import DBConnector
+from src.services.llama_inference import CaseNotesGenerator
 
 st.set_page_config(page_title="Case Crafter",layout="wide")
 
@@ -230,8 +230,16 @@ try:
                 # Save button
                 with save_col2:
                     st.write("")
-                    save_button = st.button("💾 Save")
+                    # save_button = st.button("💾 Save")
+                    # if save_button:
+                    #     db_connector.update_feedback(session_id, user_custom_feedback)
 
+                    if st.button("💾 Save"):
+                        if user_custom_feedback:
+                            # Call the database update function directly here
+                            db_connector.update_feedback(session_id, user_custom_feedback)
+                        else:
+                            st.write("Please enter your feedback before saving.")
         with col4:
             st.markdown(
                     """
@@ -314,9 +322,6 @@ try:
                         update_recommendations(recommendation_2_placeholder, response_to_treatment, "Recommended")
                         update_recommendations(recommendation_3_placeholder, client_status, "Recommended")
                         update_recommendations(recommendation_4_placeholder, risk_assessment, "Recommended")
-
-            if save_button:
-                db_connector.update_feedback(session_id, user_custom_feedback)
 
     db_connector.close()
 
