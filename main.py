@@ -23,39 +23,15 @@ whisper_model = whisper.load_model("base")
 
 db_connector = DBConnector()
 session_id, therapist_id, client_id, client_name = utils.setup_session()
-if "session_id" not in st.session_state: 
+if "session_id" not in st.session_state:
     st.session_state["session_id"] = session_id
 else:
     session_id = st.session_state["session_id"]
 
-def render_sections(section_lst, description_lst, content_lst):
-    l = ['']
-    for idx, (key, description) in enumerate(zip(section_lst, description_lst)):
-        content = content_lst[idx]
-        l.append(
-            """
-                <h4>{}</h4>
-                <p>{}</p>
-                <p>Content: {}</p>
-            """.format(key, description, content)
-        )
-    return """
-        <div style="border: 1px solid #BEC6A0; padding: 10px; border-radius: 5px; margin-bottom: 10px; background-color: white;box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2)">
-            {}
-        </div>
-    """.format('<br>'.join(l))
-
-def update_recommendations(placeholder, category_data, label):
-    if len(category_data) > 0:
-        recommended_text = " ".join([f'<span class="recommendedtext">{item}</span>' for item in category_data])
-        placeholder.markdown(f'<p>{label}: {recommended_text}</p>', unsafe_allow_html=True)
-    else:
-        placeholder.markdown(f'<p>{label}: None</p>', unsafe_allow_html=True)
-
 try:
 
     db_connector.connect()
-
+    user_custom_feedback= None
     st.markdown("<h1 style='text-align: center;'>Case Crafter</h1>", unsafe_allow_html=True)
     st.markdown("<h2 style='text-align: center;'>Your AI Therapist Ally</h2>", unsafe_allow_html=True)
     st.markdown("---")
@@ -97,20 +73,31 @@ try:
         st.markdown("#### Progress Notes")
 
         st.markdown("###### Client Presentation")
+
+        section1_keys = ['anxious', 'confused', 'energetic', 'worried', 'fearful','cooperative_1','withdrawn','lethargic','relaxed','depressed']
+        section2_keys = ['cooperative_2', 'uninterested', 'receptive', 'combative', 'engaged']
+        section3_keys = ['improving', 'unchanged', 'regressed', 'deteriorating']
+        section4_keys = ['attempted_harm', 'intention_harm', 'suicidal_ideation', 'danger_self', 'danger_other', 'plan_harm']
+
+        utils.initialize_session_state(section1_keys)
+        utils.initialize_session_state(section2_keys)
+        utils.initialize_session_state(section3_keys)
+        utils.initialize_session_state(section4_keys)
+
         section_1 = st.columns(3)
         with section_1[0]:
-            option_1 = st.checkbox('Anxious')
-            option_2 = st.checkbox('Confused')
-            option_3 = st.checkbox('Energetic')
-            option_4 = st.checkbox('Worried')
+            option_1 = st.checkbox('Anxious', key="anxious")
+            option_2 = st.checkbox('Confused', key="confused")
+            option_3 = st.checkbox('Energetic', key='energetic')
+            option_4 = st.checkbox('Worried',key='worried')
         with section_1[1]:
-            option_5 = st.checkbox('Fearful')
+            option_5 = st.checkbox('Fearful',key='fearful')
             option_6 = st.checkbox('Cooperative', key="cooperative_1")
-            option_7 = st.checkbox('Withdrawn')
+            option_7 = st.checkbox('Withdrawn',key='withdrawn')
         with section_1[2]:
-            option_8 = st.checkbox('Lethargic')
-            option_9 = st.checkbox('Relaxed')
-            option_10 = st.checkbox('Depressed')
+            option_8 = st.checkbox('Lethargic',key='lethargic')
+            option_9 = st.checkbox('Relaxed',key='relaxed')
+            option_10 = st.checkbox('Depressed',key='depressed')
 
         recommendation_1_placeholder = st.empty()
         recommendation_1_placeholder.markdown(st.session_state['client_presentation'], unsafe_allow_html=True)
@@ -119,11 +106,11 @@ try:
         section_2 = st.columns(2)
         with section_2[0]:
             option_11 = st.checkbox('Cooperative', key="cooperative_2")
-            option_12 = st.checkbox('Uninterested')
-            option_13 = st.checkbox('Receptive')
+            option_12 = st.checkbox('Uninterested', key='uninterested')
+            option_13 = st.checkbox('Receptive',key='receptive')
         with section_2[1]:
-            option_14 = st.checkbox('Combative')
-            option_15 = st.checkbox('Engaged')
+            option_14 = st.checkbox('Combative',key='combative')
+            option_15 = st.checkbox('Engaged',key='engaged')
 
         recommendation_2_placeholder = st.empty()
         recommendation_2_placeholder.markdown(st.session_state['response_to_treatment'], unsafe_allow_html=True)
@@ -135,7 +122,7 @@ try:
             option_17 = st.checkbox('Unchanged', key="unchanged")
         with section_3[1]:
             option_18 = st.checkbox('Regressed', key="regressed")
-            option_19 = st.checkbox('Deteriorating')
+            option_19 = st.checkbox('Deteriorating', key='deteriorating')
 
         recommendation_3_placeholder = st.empty()
         recommendation_3_placeholder.markdown(st.session_state['client_status'], unsafe_allow_html=True)
@@ -143,13 +130,13 @@ try:
         st.markdown("###### Risk Assessment")
         section_4 = st.columns(2)
         with section_4[0]:
-            option_20 = st.checkbox('Attempted to Cause Harm')
-            option_21 = st.checkbox('Intention to Cause Harm')
-            option_23 = st.checkbox('Suicidal Ideation')
+            option_20 = st.checkbox('Attempted to Cause Harm', key="attempted_harm")
+            option_21 = st.checkbox('Intention to Cause Harm', key="intention_harm")
+            option_22 = st.checkbox('Suicidal Ideation', key="suicidal_ideation")
         with section_4[1]:
-            option_24 = st.checkbox('Danger to Self')
-            option_25 = st.checkbox('Danger to Other')
-            option_26 = st.checkbox('Plan to Cause Harm')
+            option_23 = st.checkbox('Danger to Self', key="danger_self")
+            option_24 = st.checkbox('Danger to Other', key="danger_other")
+            option_25 = st.checkbox('Plan to Cause Harm', key="plan_harm")
 
         recommendation_4_placeholder = st.empty()
         recommendation_4_placeholder.markdown(st.session_state['risk_assessment'], unsafe_allow_html=True)
@@ -178,7 +165,7 @@ try:
 
             # Placeholder for bordered section
             section_placeholder = st.empty()
-            section_placeholder.markdown(render_sections(section_lst, description_lst, st.session_state['content_text']), unsafe_allow_html=True)
+            section_placeholder.markdown(utils.render_sections(section_lst, description_lst, st.session_state['content_text']), unsafe_allow_html=True)
 
         if 'disliked' not in st.session_state:
             st.session_state['disliked'] = False
@@ -230,16 +217,8 @@ try:
                 # Save button
                 with save_col2:
                     st.write("")
-                    # save_button = st.button("💾 Save")
-                    # if save_button:
-                    #     db_connector.update_feedback(session_id, user_custom_feedback)
+                    save_button = st.button("💾 Save")
 
-                    if st.button("💾 Save"):
-                        if user_custom_feedback:
-                            # Call the database update function directly here
-                            db_connector.update_feedback(session_id, user_custom_feedback)
-                        else:
-                            st.write("Please enter your feedback before saving.")
         with col4:
             st.markdown(
                     """
@@ -290,21 +269,27 @@ try:
                         progress_notes = ProgressNotes(transcript)
                         json_progress_notes = progress_notes.run_progress_notes()
 
-                        #push progress notes to db here
-
                         # update case notes
                         content_lst = []
                         for key, value in case_notes.items():
                             content_lst.append(value)
                         for i in range(len(content_lst)):
                             st.session_state['content_text'][i] = f"{content_lst[i]}"
-                        section_placeholder.markdown(render_sections(section_lst, description_lst, st.session_state['content_text']), unsafe_allow_html=True)
+                        section_placeholder.markdown(utils.render_sections(section_lst, description_lst, st.session_state['content_text']), unsafe_allow_html=True)
 
                         # update progress notes
                         client_presentation = json_progress_notes['progress_notes'][0]['client_presentation']
                         response_to_treatment = json_progress_notes['progress_notes'][0]['response_to_treatment']
                         client_status = json_progress_notes['progress_notes'][0]['client_status']
                         risk_assessment = json_progress_notes['progress_notes'][0]['risk_assessment']
+
+                        client_presentation_db = ', '.join([item.lower() for item in client_presentation])
+                        response_to_treatment_db = ', '.join([item.lower() for item in response_to_treatment])
+                        client_status_db = ', '.join([item.lower() for item in client_status])
+                        risk_assessment_db = ', '.join([item.lower() for item in risk_assessment])
+
+                        # update db progress notes
+                        db_connector.insert_progress_notes(session_id, therapist_id, client_name, client_id, client_presentation_db, response_to_treatment_db, client_status_db, risk_assessment_db)
 
                         client_presentation_html = '<p>Recommended: ' + ' '.join([f'<span class="recommendedtext">{item}</span>' for item in client_presentation]) + '</p>'
                         response_to_treatment_html = '<p>Recommended: ' + ' '.join([f'<span class="recommendedtext">{item}</span>' for item in response_to_treatment]) + '</p>'
@@ -318,10 +303,20 @@ try:
                         st.session_state['risk_assessment'] = risk_assessment_html
 
                         # Update the placeholders with the new recommendations using HTML
-                        update_recommendations(recommendation_1_placeholder, client_presentation, "Recommended")
-                        update_recommendations(recommendation_2_placeholder, response_to_treatment, "Recommended")
-                        update_recommendations(recommendation_3_placeholder, client_status, "Recommended")
-                        update_recommendations(recommendation_4_placeholder, risk_assessment, "Recommended")
+                        utils.update_recommendations(recommendation_1_placeholder, client_presentation, "Recommended")
+                        utils.update_recommendations(recommendation_2_placeholder, response_to_treatment, "Recommended")
+                        utils.update_recommendations(recommendation_3_placeholder, client_status, "Recommended")
+                        utils.update_recommendations(recommendation_4_placeholder, risk_assessment, "Recommended")
+
+            if user_custom_feedback:
+                if save_button:
+                    db_connector.update_feedback(session_id, user_custom_feedback)
+                    client_presentation_final = utils.get_selected_keys_string(section1_keys)
+                    response_treatment_final = utils.get_selected_keys_string(section2_keys)
+                    client_status_final = utils.get_selected_keys_string(section3_keys)
+                    risk_assesment_final = utils.get_selected_keys_string(section4_keys)
+                    db_connector.update_prog_notes_feedback(session_id, client_presentation_final, response_treatment_final, client_status_final, risk_assesment_final)
+                    st.write("Thank you for your feedback!")
 
     db_connector.close()
 
