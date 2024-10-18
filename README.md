@@ -10,7 +10,7 @@ Case Crafter is an AI tool designed to automate the creation of therapy case not
 ## Usage
 To start the application, run:
 ```bash
-uvicorn src.main:app --reload
+uvicorn streamlit run main.py
 ```
 Access the API at: http://localhost:8000/.
 
